@@ -73,6 +73,28 @@ def evaluate_model(model, test_loader, device="cpu"):
     return average_loss, accuracy
 
 
+def evaluate_train_loss(model, client_loaders, device="cpu"):
+    """Evaluate the global model on the union of all client training data."""
+    model = model.to(device)
+    model.eval()
+    criterion = torch.nn.CrossEntropyLoss(reduction="sum")
+    total_loss = 0.0
+    total = 0
+
+    with torch.no_grad():
+        for loader in client_loaders.values():
+            for images, labels in loader:
+                images = images.to(device)
+                labels = labels.to(device)
+                outputs = model(images)
+                total_loss += criterion(outputs, labels).item()
+                total += labels.size(0)
+
+    if total == 0:
+        raise ValueError("Client loaders contain no training samples")
+    return total_loss / total
+
+
 def run_fedavg(
     global_model,
     client_loaders,
@@ -141,7 +163,12 @@ def run_fedavg(
             client_weights
         )
 
-        loss, accuracy = evaluate_model(
+        train_loss = evaluate_train_loss(
+            global_model,
+            client_loaders,
+            device=device
+        )
+        test_loss, accuracy = evaluate_model(
             global_model,
             test_loader,
             device=device
@@ -151,7 +178,8 @@ def run_fedavg(
             "round": round_num,
             "total_wall_clock_sec": total_wall_clock,
             "round_wall_clock_sec": round_duration,
-            "train_loss": loss,
+            "train_loss": train_loss,
+            "test_loss": test_loss,
             "test_accuracy": accuracy,
             "client_completion_times": completion_times
         })
@@ -159,7 +187,8 @@ def run_fedavg(
         print(
             f"Round {round_num}/{num_rounds} | "
             f"Time: {total_wall_clock:.2f}s | "
-            f"Loss: {loss:.4f} | "
+            f"Train Loss: {train_loss:.4f} | "
+            f"Test Loss: {test_loss:.4f} | "
             f"Accuracy: {accuracy:.2f}%"
         )
 
