@@ -41,7 +41,8 @@ class CNN(nn.Module):
         return self.classifier(x)
 
 
-def local_train(model, dataloader, Q=200, lr=0.003):
+def local_train(model, dataloader, Q=200, lr=0.003, device="cpu"):
+    model = model.to(device)
     model.train()
 
     criterion = nn.CrossEntropyLoss()
@@ -62,6 +63,9 @@ def local_train(model, dataloader, Q=200, lr=0.003):
         except StopIteration:
             data_iter = iter(dataloader)
             images, labels = next(data_iter)
+
+        images = images.to(device)
+        labels = labels.to(device)
 
         optimizer.zero_grad()
         outputs = model(images)

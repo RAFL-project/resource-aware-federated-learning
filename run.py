@@ -10,15 +10,11 @@ Expected project modules:
     model.py         -> CNN + local_train
     heterogeneity.py -> HeterogeneitySimulator
     fedavg.py        -> run_fedavg
-
-The runner also falls back to the uploaded "Data Partitioning_Client Loaders.py"
-for the class partition if dataset.py is not available.
 """
 
 import argparse
 import csv
 import importlib
-import importlib.util
 import os
 import random
 import sys
@@ -35,28 +31,26 @@ RESULTS_DIR = ROOT / "results" / "csv"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def default_device() -> str:
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
+
 def set_seed(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+    if torch.backends.mps.is_available():
+        torch.mps.manual_seed(seed)
 
 
-def load_module(module_name: str, fallback_file: str | None = None):
-    try:
-        return importlib.import_module(module_name)
-    except ModuleNotFoundError as exc:
-        if fallback_file is None:
-            raise
-        path = ROOT / fallback_file
-        if not path.exists():
-            raise exc
-        spec = importlib.util.spec_from_file_location(module_name, path)
-        module = importlib.util.module_from_spec(spec)
-        assert spec.loader is not None
-        spec.loader.exec_module(module)
-        return module
+def load_module(module_name: str):
+    return importlib.import_module(module_name)
 
 
 def build_test_loader(batch_size=256):
@@ -74,11 +68,7 @@ def build_test_loader(batch_size=256):
 
 
 def get_class_partition(m: int, seed: int):
-    """Use the exact uploaded class-partition implementation."""
-    dataset_module = load_module(
-        "dataset",
-        fallback_file="Data Partitioning_Client Loaders.py",
-    )
+    dataset_module = load_module("dataset")
 
     if hasattr(dataset_module, "get_mnist_client_loaders"):
         # The supplied implementation uses NumPy's global RNG.
@@ -89,24 +79,12 @@ def get_class_partition(m: int, seed: int):
         return loaders, weights
 
     raise AttributeError(
-        "Could not find get_mnist_client_loaders() in dataset.py "
-        "or Data Partitioning_Client Loaders.py."
+        "Could not find get_mnist_client_loaders() in dataset.py."
     )
 
 
 def get_dirichlet_partition(m: int, seed: int):
-    """
-    The Phase-1 specification requires Dual Dirichlet Partition (Algorithm 5).
-    The uploaded data-partition file contains only Class Partition.
-
-    Therefore this runner intentionally looks for a completed implementation
-    supplied by Member 1 instead of silently replacing Algorithm 5 with a
-    different partitioning algorithm.
-    """
-    dataset_module = load_module(
-        "dataset",
-        fallback_file="Data Partitioning_Client Loaders.py",
-    )
+    dataset_module = load_module("dataset")
 
     candidates = [
         "get_dirichlet_client_loaders",
@@ -128,14 +106,8 @@ def get_dirichlet_partition(m: int, seed: int):
                 return result[0], result[1]
 
     raise RuntimeError(
-        "\nDirichlet experiment cannot start yet.\n"
-        "The uploaded partition file implements Class Partition, but no "
-        "Dual Dirichlet/Dirichlet loader function was found.\n"
-        "Ask Member 1 to expose the completed Algorithm-5 implementation "
-        "through dataset.py, preferably as:\n\n"
-        "    get_dirichlet_client_loaders(m, seed=seed)\n\n"
-        "Do not substitute a generic Dirichlet split if the project requires "
-        "the paper's Dual Dirichlet algorithm."
+        "No Dual Dirichlet/Dirichlet loader function was found in dataset.py.\n"
+        "Expected one of: " + ", ".join(candidates)
     )
 
 
@@ -190,8 +162,9 @@ def parse_args():
     parser.add_argument("--lr", type=float, default=0.003)
     parser.add_argument(
         "--device",
-        default="cuda" if torch.cuda.is_available() else "cpu",
-        choices=["cpu", "cuda"],
+        default=default_device(),
+        choices=["cpu", "cuda", "mps"],
+        help="mps uses Apple Silicon's Metal GPU (M1/M2/M3).",
     )
     return parser.parse_args()
 
@@ -214,7 +187,7 @@ def main():
     print("=" * 70)
 
     # Phase 4 modules.
-    fedavg = load_module("fedavg", fallback_file="Fedavg.py")
+    fedavg = load_module("fedavg")
     heterogeneity = load_module("heterogeneity")
     model_module = load_module("model")
 
@@ -257,9 +230,7 @@ def main():
     _, history = fedavg.run_fedavg(
         global_model=global_model,
         client_loaders=client_loaders,
-        client_weights=list(client_weights.values())
-        if isinstance(client_weights, dict)
-        else client_weights,
+        client_weights=client_weights,
         local_train=model_module.local_train,
         test_loader=test_loader,
         heterogeneity_simulator=simulator,

@@ -22,7 +22,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
 CSV_DIR = ROOT / "results" / "csv"
-PLOT_DIR = ROOT / "results" / "plots"
+PLOT_DIR = ROOT / "results" / "plot"
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 
