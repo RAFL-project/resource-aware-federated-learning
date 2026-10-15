@@ -31,7 +31,8 @@ def parse_filename(path):
         r"clients(?P<clients>\d+)_"
         r"(?P<heterogeneity>[^_]+)_"
         r"(?P<partition>[^_]+)_"
-        r"seed(?P<seed>\d+)\.csv"
+        r"seed(?P<seed>\d+)"
+        r"(?:_(?P<algorithm>[a-z]+))?\.csv"
     )
     match = re.match(pattern, path.name)
 
@@ -43,6 +44,8 @@ def parse_filename(path):
         "heterogeneity": match.group("heterogeneity"),
         "partition": match.group("partition"),
         "seed": int(match.group("seed")),
+        # Milestone 1 files have no suffix; those runs are plain FedAvg.
+        "algorithm": match.group("algorithm") or "fedavg",
     }
 
 

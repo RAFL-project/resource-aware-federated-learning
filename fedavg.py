@@ -1,14 +1,22 @@
 import copy
+import time
+
 import torch
 
 
-def select_clients(client_ids, round_num):
+def select_clients(client_ids, round_num, est_time=None, age=None):
     """
-    Milestone-2 seam: decide which clients participate in this round.
+    Default selector: everybody, every round. This is plain FedAvg.
 
-    Returning every client every round reproduces plain FedAvg (Milestone 1).
-    The CompassScheduler (Milestone 2) replaces this function's body with
-    computing-power/utility-aware selection of a subset S* of client_ids.
+    Milestone 2 passes a different callable as `run_fedavg(selector=...)`:
+    `selection.random_selection` for the random-subset arm, or
+    `selection.adaptive_selection` for the proposed score. FedCompass does
+    not go through here at all -- it is semi-asynchronous and has its own
+    loop in `compass.py`.
+
+    est_time/age are the per-client profile the scoring selectors need
+    (estimated seconds per round, and rounds since last selected). They are
+    ignored here but are part of the signature every selector accepts.
     """
     return list(client_ids)
 
@@ -121,10 +129,18 @@ def run_fedavg(
     num_rounds=10,
     Q=200,
     lr=0.003,
-    device="cpu"
+    device="cpu",
+    selector=select_clients,
+    time_budget=None
 ):
     """
     client_weights: {client_id: weight}, keyed identically to client_loaders.
+
+    selector:    callable(client_ids, round_num, est_time, age) -> subset.
+                 Defaults to "everyone", i.e. plain FedAvg.
+    time_budget: optional simulated-seconds cap. Set it to compare against
+                 FedCompass, which is budget-driven rather than round-driven;
+                 leave it None to run a fixed number of rounds as before.
     """
     if client_loaders.keys() != client_weights.keys():
         raise ValueError(
@@ -150,9 +166,32 @@ def run_fedavg(
 
     total_wall_clock = 0.0
 
+    # Server-side client profile. est_time is an EMA of the client's observed
+    # seconds-per-round; a client that has never been selected has no entry,
+    # and the scoring selectors are required to handle that (they run a
+    # profiling round rather than inventing a speed). age counts rounds since
+    # a client last trained, which is what keeps top-K from starving anyone.
+    est_time = {}
+    age = {cid: 0 for cid in client_ids}
+    participation = {cid: 0 for cid in client_ids}
+    speed_momentum = 0.9
+    comm_transfers = 0
+    selection_overhead = 0.0
+
     for round_num in range(1, num_rounds + 1):
 
-        selected_ids = select_clients(client_ids, round_num)
+        selection_start = time.perf_counter()
+        selected_ids = selector(client_ids, round_num, est_time, age)
+        selection_overhead += time.perf_counter() - selection_start
+
+        if not selected_ids:
+            raise ValueError(
+                f"selector returned no clients in round {round_num}"
+            )
+
+        unknown = set(selected_ids) - set(client_ids)
+        if unknown:
+            raise ValueError(f"selector returned unknown client ids: {unknown}")
 
         client_updates = {}
 
@@ -173,11 +212,27 @@ def run_fedavg(
         completion_times, round_duration = (
             heterogeneity_simulator.get_round_duration(
                 round_num,
-                Q
+                Q,
+                client_ids=selected_ids
             )
         )
 
         total_wall_clock += round_duration
+
+        for client_id in client_ids:
+            if client_id in completion_times:
+                observed = completion_times[client_id]
+                previous = est_time.get(client_id, observed)
+                est_time[client_id] = (
+                    (1 - speed_momentum) * previous
+                    + speed_momentum * observed
+                )
+                age[client_id] = 0
+                participation[client_id] += 1
+                # Model down to the client, update back up.
+                comm_transfers += 2
+            else:
+                age[client_id] += 1
 
         selected_weights = {
             client_id: client_weights[client_id] for client_id in selected_ids
@@ -207,15 +262,41 @@ def run_fedavg(
             "train_loss": train_loss,
             "test_loss": test_loss,
             "test_accuracy": accuracy,
+            "num_selected": len(selected_ids),
+            "comm_transfers": comm_transfers,
             "client_completion_times": completion_times
         })
 
         print(
             f"Round {round_num}/{num_rounds} | "
             f"Time: {total_wall_clock:.2f}s | "
+            f"Clients: {len(selected_ids)}/{len(client_ids)} | "
             f"Train Loss: {train_loss:.4f} | "
             f"Test Loss: {test_loss:.4f} | "
             f"Accuracy: {accuracy:.2f}%"
         )
 
-    return global_model, history
+        if time_budget is not None and total_wall_clock >= time_budget:
+            print(
+                f"Reached simulated time budget "
+                f"({total_wall_clock:.1f}s >= {time_budget:.1f}s)."
+            )
+            break
+
+    # Idle time: a selected client that finishes early sits waiting for the
+    # round's straggler. This is exactly what FedCompass is built to remove,
+    # so it is the number the comparison turns on.
+    total_idle = 0.0
+    for row in history:
+        for completion in row["client_completion_times"].values():
+            total_idle += row["round_wall_clock_sec"] - completion
+
+    stats = {
+        "participation": participation,
+        "comm_transfers": comm_transfers,
+        "simulated_time": total_wall_clock,
+        "total_idle_sec": total_idle,
+        "selection_overhead_sec": selection_overhead,
+    }
+
+    return global_model, history, stats
