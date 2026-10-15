@@ -1,0 +1,28 @@
+{
+  "algorithm": "fedavg",
+  "clients": 5,
+  "heterogeneity": "homo",
+  "partition": "dirichlet",
+  "seed": 0,
+  "K": null,
+  "global_updates": 20,
+  "evaluated_points": 20,
+  "final_accuracy": 70.31,
+  "best_accuracy": 73.12,
+  "target_accuracy": 90.0,
+  "updates_to_target": null,
+  "time_to_target_sec": null,
+  "simulated_time_sec": 634.6599447451408,
+  "comm_transfers": 200,
+  "total_idle_sec": 161.13521970209703,
+  "selection_overhead_sec": 1.7628975911065936e-05,
+  "participation": {
+    "1": 20,
+    "2": 20,
+    "3": 20,
+    "4": 20,
+    "5": 20
+  },
+  "participation_fairness": 1.0,
+  "mean_group_size": null
+}
