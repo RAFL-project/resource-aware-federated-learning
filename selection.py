@@ -147,7 +147,7 @@ def adaptive_selection(
             alpha * speed_score[cid]
             + beta * data_profile.get(cid, 0.0)
             - gamma * comm_cost.get(cid, 1.0)
-            + delta * (age.get(cid, 0) / oldest)
+            + delta * age.get(cid, 0)
         )
         for cid in client_ids
     }
