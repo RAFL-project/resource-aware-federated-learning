@@ -97,8 +97,8 @@ def evaluate_model(model, test_loader, device="cpu"):
     return average_loss, accuracy
 
 
-def evaluate_train_loss(model, client_loaders, device="cpu"):
-    """Evaluate the global model on the union of all client training data."""
+def evaluate_train_loss(model, client_loaders, device="cpu", max_samples=1000):
+    """Evaluate the global model on client training data (subsampled for efficiency)."""
     model = model.to(device)
     model.eval()
     criterion = torch.nn.CrossEntropyLoss(reduction="sum")
@@ -113,6 +113,10 @@ def evaluate_train_loss(model, client_loaders, device="cpu"):
                 outputs = model(images)
                 total_loss += criterion(outputs, labels).item()
                 total += labels.size(0)
+                if total >= max_samples:
+                    break
+            if total >= max_samples:
+                break
 
     if total == 0:
         raise ValueError("Client loaders contain no training samples")
