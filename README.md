@@ -252,3 +252,10 @@ for why an exact match isn't expected (fewer training rounds than the paper's
 unspecified convergence budget, and natural seed-to-seed variance under
 extreme non-IID Dirichlet splits — the same client-drift problem FedCompass
 itself is designed to fix).
+
+## The Brief
+
+The assignment text, the requirement-to-code map, and the remaining plan live
+in [BRIEF.md](BRIEF.md). That file is the source of truth for scope; the
+milestone labels used below are our own build-order shorthand, not graded
+checkpoints.
