@@ -167,7 +167,7 @@ class FLServerState:
                             alpha=1.0,
                             beta=0.3,
                             gamma=0.1,
-                            delta=0.3  # Linear priority aging!
+                            delta=0.5  # Linear priority aging!
                         )
                     elif self.algorithm == "compass":
                         # FedCompass selects active clients

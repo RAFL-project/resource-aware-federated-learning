@@ -159,6 +159,7 @@ def build_selector(args, client_loaders, selection):
             beta=args.beta,
             gamma=args.gamma,
             delta=args.delta,
+            cover_floor=args.cover_floor,
         )
 
     return selector
@@ -312,8 +313,19 @@ def parse_args():
                        help="weight on D_i (useful local data)")
     score.add_argument("--gamma", type=float, default=0.1,
                        help="weight on C_i (communication cost)")
-    score.add_argument("--delta", type=float, default=0.15,
+    score.add_argument("--delta", type=float, default=0.5,
                        help="weight on staleness/age, our anti-starvation term")
+    score.add_argument(
+        "--cover-floor", type=float, default=-1.0,
+        help="adaptive only: grow the selected set until every class has at "
+             "least this fraction of its samples in it (--K becomes a cap). "
+             "Default 0.5/clients. 0 = fixed K.",
+    )
+    score.add_argument(
+        "--deadline-steps", action=argparse.BooleanOptionalAction, default=True,
+        help="adaptive only: per-client Q_i = clamp(Q*T_fastest/T_i, Q//5, Q) "
+             "so the round ends when the fastest selected client is done.",
+    )
 
     compass_group = parser.add_argument_group("compass scheduler")
     compass_group.add_argument("--min-Q", type=int, default=None,
@@ -342,8 +354,16 @@ def main():
     args = parse_args()
     set_seed(args.seed)
 
+    if args.cover_floor < 0:
+        args.cover_floor = 0.5 / args.clients
+    elif args.cover_floor == 0:
+        args.cover_floor = None
+    if args.algorithm != "adaptive":
+        args.cover_floor = None
+        args.deadline_steps = False
     if args.K is None:
-        args.K = max(1, (args.clients + 1) // 2)
+        # Coverage-driven K only needs a cap; fixed K keeps the old default.
+        args.K = args.clients if args.cover_floor else max(1, (args.clients + 1) // 2)
     if args.min_Q is None:
         args.min_Q = max(1, args.Q // 5)
 
@@ -360,7 +380,10 @@ def main():
     print(f"Learning rate : {args.lr}")
     print(f"Device        : {args.device}")
     if args.algorithm in ("random", "adaptive"):
-        print(f"K per round   : {args.K}")
+        print(f"K per round   : {args.K}"
+              + (f" (cap; cover floor {args.cover_floor:.3f})" if args.cover_floor else ""))
+        if args.deadline_steps:
+            print(f"Deadline steps: Q_i in [{args.min_Q}, {args.Q}]")
     if args.algorithm == "compass":
         print(f"Q range       : [{args.min_Q}, {args.Q}]")
     print("=" * 70)
@@ -459,6 +482,8 @@ def main():
             device=args.device,
             selector=selector,
             time_budget=time_budget,
+            deadline_steps=args.deadline_steps,
+            min_Q=args.min_Q,
         )
 
     # fedavg keeps Milestone 1's filename so verify_baseline.py still finds

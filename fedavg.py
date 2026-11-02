@@ -135,7 +135,9 @@ def run_fedavg(
     lr=0.003,
     device="cpu",
     selector=select_clients,
-    time_budget=None
+    time_budget=None,
+    deadline_steps=False,
+    min_Q=None,
 ):
     """
     client_weights: {client_id: weight}, keyed identically to client_loaders.
@@ -145,6 +147,13 @@ def run_fedavg(
     time_budget: optional simulated-seconds cap. Set it to compare against
                  FedCompass, which is budget-driven rather than round-driven;
                  leave it None to run a fixed number of rounds as before.
+    deadline_steps: give every selected client its own step count so the
+                 round ends when the *fastest* selected client has done Q
+                 steps: Q_i = clamp(Q * T_fastest / T_i, min_Q, Q). Fast
+                 clients no longer idle behind the straggler, and the
+                 straggler no longer sets the round time. Off (every client
+                 does Q) for plain FedAvg and the random arm.
+    min_Q:       floor for Q_i under deadline_steps; default Q // 5.
     """
     if client_loaders.keys() != client_weights.keys():
         raise ValueError(
@@ -170,8 +179,11 @@ def run_fedavg(
 
     total_wall_clock = 0.0
 
+    if min_Q is None:
+        min_Q = max(1, Q // 5)
+
     # Server-side client profile. est_time is an EMA of the client's observed
-    # seconds-per-round; a client that has never been selected has no entry,
+    # seconds-per-step; a client that has never been selected has no entry,
     # and the scoring selectors are required to handle that (they run a
     # profiling round rather than inventing a speed). age counts rounds since
     # a client last trained, which is what keeps top-K from starving anyone.
@@ -197,6 +209,15 @@ def run_fedavg(
         if unknown:
             raise ValueError(f"selector returned unknown client ids: {unknown}")
 
+        if deadline_steps and all(cid in est_time for cid in selected_ids):
+            deadline = Q * min(est_time[cid] for cid in selected_ids)
+            steps = {
+                cid: int(max(min_Q, min(Q, deadline / est_time[cid])))
+                for cid in selected_ids
+            }
+        else:
+            steps = {cid: Q for cid in selected_ids}
+
         client_updates = {}
 
         for client_id in selected_ids:
@@ -206,26 +227,24 @@ def run_fedavg(
             update = local_train(
                 client_model,
                 client_loaders[client_id],
-                Q=Q,
+                Q=steps[client_id],
                 lr=lr,
                 device=device
             )
 
             client_updates[client_id] = update
 
-        completion_times, round_duration = (
-            heterogeneity_simulator.get_round_duration(
-                round_num,
-                Q,
-                client_ids=selected_ids
-            )
-        )
+        step_times = heterogeneity_simulator.sample_step_times(selected_ids)
+        completion_times = {
+            cid: steps[cid] * step_times[cid] for cid in selected_ids
+        }
+        round_duration = max(completion_times.values())
 
         total_wall_clock += round_duration
 
         for client_id in client_ids:
             if client_id in completion_times:
-                observed = completion_times[client_id]
+                observed = completion_times[client_id] / steps[client_id]
                 previous = est_time.get(client_id, observed)
                 est_time[client_id] = (
                     (1 - speed_momentum) * previous
@@ -267,6 +286,7 @@ def run_fedavg(
             "test_loss": test_loss,
             "test_accuracy": accuracy,
             "num_selected": len(selected_ids),
+            "local_steps": steps,
             "comm_transfers": comm_transfers,
             "client_completion_times": completion_times
         })
@@ -301,6 +321,8 @@ def run_fedavg(
         "simulated_time": total_wall_clock,
         "total_idle_sec": total_idle,
         "selection_overhead_sec": selection_overhead,
+        # Effective K: matters once the selector grows the set per round.
+        "mean_group_size": sum(r["num_selected"] for r in history) / len(history),
     }
 
     return global_model, history, stats
