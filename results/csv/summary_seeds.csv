@@ -1,0 +1,9 @@
+clients,heterogeneity,partition,arm,seeds,best_acc_mean,best_acc_std,final_acc_mean,final_acc_std,reached_90,t90_mean,t90_std,comm_mean,fairness_mean
+5,normal,dirichlet,Random Selection,1,91.15,0.0,76.09,0.0,1,381.7,0.0,66.0,0.95
+5,normal,dirichlet,FedAvg (all clients),1,89.17,0.0,87.13,0.0,0,,,100.0,1.0
+5,normal,dirichlet,FedCompass,1,95.92,0.0,95.61,0.0,1,161.7,0.0,280.0,1.0
+5,normal,dirichlet,Proposed Adaptive,1,96.9,0.0,94.55,0.0,1,196.5,0.0,252.0,0.95
+20,exp,dirichlet,Random Selection,1,85.11,0.0,64.36,0.0,0,,,120.0,0.76
+20,exp,dirichlet,FedAvg (all clients),1,93.19,0.0,93.19,0.0,1,744.5,0.0,400.0,1.0
+20,exp,dirichlet,FedCompass,1,94.23,0.0,93.69,0.0,1,433.0,0.0,6170.0,0.5
+20,exp,dirichlet,Proposed Adaptive,1,96.21,0.0,93.71,0.0,1,260.2,0.0,1416.0,0.93
