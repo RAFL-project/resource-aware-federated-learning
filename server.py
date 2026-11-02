@@ -66,7 +66,7 @@ class FLServerState:
         self.global_model = model_module.CNN().to(self.device)
         self.test_loader = self._init_test_loader()
 
-        # Client registry: {cid: {name, ip, registered_at, sample_count, entropy, est_time, age, last_active, status}}
+        # Client registry: {cid: {name, ip, sample_count, class_counts, est_time (EMA sec/step), age, last_active, status}}
         self.clients: Dict[int, Dict[str, Any]] = {}
         
         # Round coordination
@@ -95,15 +95,15 @@ class FLServerState:
         test_dataset = datasets.MNIST(root="./data", train=False, download=True, transform=transform)
         return DataLoader(test_dataset, batch_size=256, shuffle=False)
 
-    def register_client(self, cid: int, name: str, ip: str, sample_count: int, entropy: float) -> dict:
+    def register_client(self, cid: int, name: str, ip: str, sample_count: int, class_counts) -> dict:
         with self.lock:
             self.clients[cid] = {
                 "cid": cid,
                 "name": name,
                 "ip": ip,
                 "sample_count": sample_count,
-                "entropy": entropy,
-                "est_time": 2.0,  # initial guess in seconds
+                "class_counts": [float(c) for c in class_counts],  # plain list: registry is JSON-dumped to the dashboard
+                "est_time": 2.0 / self.base_Q,  # seconds per step; round 1 profiles the real value
                 "age": 0,
                 "participation": 0,
                 "last_active": time.time(),
@@ -147,27 +147,23 @@ class FLServerState:
                         rng = np.random.default_rng(self.seed + self.current_round)
                         self.selected_cids = sorted(list(rng.choice(all_cids, size=K, replace=False)))
                     elif self.algorithm == "adaptive":
-                        K = max(1, (self.num_clients + 1) // 2)
+                        # Same selector, same defaults as run.py: K is a cap,
+                        # the greedy loop stops once every class is covered.
                         est_times = {cid: self.clients[cid]["est_time"] for cid in all_cids}
                         ages = {cid: self.clients[cid]["age"] for cid in all_cids}
-                        
-                        # Data profile from entropy and sample size
-                        total_samples = sum(self.clients[cid]["sample_count"] for cid in all_cids)
+                        counts = {cid: np.asarray(self.clients[cid]["class_counts"]) for cid in all_cids}
+                        total = sum(counts.values())
                         data_profile = {
-                            cid: (self.clients[cid]["sample_count"] / max(total_samples, 1)) * self.clients[cid]["entropy"]
+                            cid: counts[cid] / np.maximum(total, 1.0)
                             for cid in all_cids
                         }
-                        
                         self.selected_cids = selection.adaptive_selection(
                             client_ids=all_cids,
                             est_time=est_times,
                             data_profile=data_profile,
                             age=ages,
-                            K=K,
-                            alpha=1.0,
-                            beta=0.3,
-                            gamma=0.1,
-                            delta=0.5  # Linear priority aging!
+                            K=self.num_clients,
+                            cover_floor=0.5 / self.num_clients,
                         )
                     elif self.algorithm == "compass":
                         # FedCompass selects active clients
@@ -193,13 +189,14 @@ class FLServerState:
             # Check if client is selected
             is_selected = (cid in self.selected_cids)
             
-            # Local steps calculation
-            if self.algorithm == "compass":
-                # Dynamic local steps proportional to speed
-                fastest = min(self.clients[c]["est_time"] for c in self.clients)
-                my_time = self.clients[cid]["est_time"]
-                speed_ratio = fastest / max(my_time, 1e-3)
-                Q_assigned = int(np.clip(self.base_Q * speed_ratio, 40, self.base_Q))
+            # Local steps. Deadline steps (adaptive) / speed-scaled Q (compass):
+            # Q_i = clamp(Q * T_fastest / T_i, Q/5, Q), T_i in seconds per step.
+            # Adaptive measures "fastest" over the selected set, as fedavg.py does.
+            pool = self.selected_cids if self.algorithm == "adaptive" else list(self.clients)
+            if self.algorithm in ("adaptive", "compass") and self.current_round > 1 and pool:
+                fastest = min(self.clients[c]["est_time"] for c in pool)
+                my_time = max(self.clients[cid]["est_time"], 1e-6)
+                Q_assigned = int(np.clip(self.base_Q * fastest / my_time, max(1, self.base_Q // 5), self.base_Q))
             else:
                 Q_assigned = self.base_Q
 
@@ -216,7 +213,7 @@ class FLServerState:
                 "model_bytes": model_bytes
             }
 
-    def process_client_submission(self, cid: int, round_num: int, elapsed_time: float, delta_bytes: bytes):
+    def process_client_submission(self, cid: int, round_num: int, elapsed_time: float, delta_bytes: bytes, steps_done: int):
         with self.lock:
             if round_num != self.current_round:
                 return {"status": "error", "message": f"Stale round {round_num}; current is {self.current_round}"}
@@ -236,9 +233,10 @@ class FLServerState:
             self.clients[cid]["last_active"] = time.time()
             self.clients[cid]["age"] = 0  # reset age upon training
             
-            # Update EMA of client speed
+            # EMA of seconds per step, so clients given fewer steps are not read as faster
+            observed = elapsed_time / max(steps_done, 1)
             old_est = self.clients[cid]["est_time"]
-            self.clients[cid]["est_time"] = 0.7 * old_est + 0.3 * elapsed_time
+            self.clients[cid]["est_time"] = 0.7 * old_est + 0.3 * observed
             self.comm_transfers += 1  # update received up
 
             print(f" -> [Client {self.clients[cid]['name']} (ID: {cid})] submitted update! Trained in {elapsed_time:.2f}s ({len(self.submitted_updates)}/{len(self.selected_cids)} received)")
@@ -459,7 +457,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
                         <div class="client-stats">
                             <div>IP: <b>${c.ip}</b></div>
                             <div>Samples: <b>${c.sample_count}</b></div>
-                            <div>Speed (EMA): <b>${c.est_time.toFixed(2)}s</b></div>
+                            <div>Speed (EMA): <b>${(c.est_time*1000).toFixed(1)} ms/step</b></div>
                             <div>Last Epoch: <b>${c.last_train_time.toFixed(2)}s</b></div>
                             <div>Age (Rounds): <b>${c.age}</b></div>
                             <div>Participations: <b>${c.participation}</b></div>
@@ -583,10 +581,10 @@ class FLHTTPRequestHandler(BaseHTTPRequestHandler):
             cid = int(req["client_id"])
             name = str(req.get("name", f"Client-{cid}"))
             sample_count = int(req.get("sample_count", 1000))
-            entropy = float(req.get("entropy", 1.0))
+            class_counts = req.get("class_counts") or [sample_count / 10.0] * 10  # old clients: assume uniform
             client_ip = self.client_address[0]
 
-            res = state.register_client(cid, name, client_ip, sample_count, entropy)
+            res = state.register_client(cid, name, client_ip, sample_count, class_counts)
             print(f"[SERVER] Client connected: {name} (ID: {cid}) from {client_ip} with {sample_count} samples.")
 
             # Trigger round start if training was already requested
@@ -602,9 +600,10 @@ class FLHTTPRequestHandler(BaseHTTPRequestHandler):
             cid = int(self.headers.get("X-Client-Id", -1))
             round_num = int(self.headers.get("X-Round", -1))
             elapsed_time = float(self.headers.get("X-Elapsed-Time", 0.0))
+            steps_done = int(self.headers.get("X-Q", state.base_Q))
             delta_bytes = self.rfile.read(content_length)
 
-            res = state.process_client_submission(cid, round_num, elapsed_time, delta_bytes)
+            res = state.process_client_submission(cid, round_num, elapsed_time, delta_bytes, steps_done)
             
             # Check if next round can start
             state.start_round_if_ready()

@@ -21,19 +21,16 @@ import torch
 
 # Project modules
 import model as model_module
-from dataset import get_dirichlet_client_loaders, get_class_partition_client_loaders
+from run import get_class_partition, get_dirichlet_partition  # same seeded partitions as the simulator
 
 
-def compute_label_entropy(loader, num_classes=10) -> float:
-    """Computes Shannon entropy of client's local label distribution."""
+def class_counts(loader, num_classes=10):
+    """Per-class label histogram. This is all the server learns about the
+    local data: the selector needs it to score what a client *adds* to the
+    chosen set (see selection.client_data_profile). Raw samples never leave."""
     subset = loader.dataset
     labels = np.asarray(subset.dataset.targets)[np.asarray(subset.indices)]
-    counts = np.bincount(labels, minlength=num_classes)
-    probs = counts / counts.sum()
-    probs = probs[probs > 0]
-    raw_entropy = -np.sum(probs * np.log(probs))
-    max_entropy = np.log(num_classes)
-    return float(raw_entropy / max_entropy) if max_entropy > 0 else 1.0
+    return np.bincount(labels, minlength=num_classes).tolist()
 
 
 def main():
@@ -63,9 +60,9 @@ def main():
     # 1. Load this client's partitioned data
     print("\n[CLIENT] Preparing local private dataset partition...")
     if args.partition == "class":
-        loaders, _ = get_class_partition_client_loaders(args.total_clients, seed=args.seed)
+        loaders, _ = get_class_partition(args.total_clients, seed=args.seed)
     else:
-        loaders, _ = get_dirichlet_client_loaders(args.total_clients, seed=args.seed)
+        loaders, _ = get_dirichlet_partition(args.total_clients, seed=args.seed)
 
     if args.client_id not in loaders:
         print(f"Error: Client ID {args.client_id} not found in partition (available: {list(loaders.keys())})")
@@ -73,8 +70,9 @@ def main():
 
     my_loader = loaders[args.client_id]
     sample_count = len(my_loader.dataset)
-    entropy = compute_label_entropy(my_loader)
-    print(f"[CLIENT] Private local dataset ready: {sample_count} samples | Label Diversity: {entropy:.3f}")
+    counts = class_counts(my_loader)
+    print(f"[CLIENT] Private local dataset ready: {sample_count} samples | "
+          f"classes present: {sum(c > 0 for c in counts)}/10")
 
     # 2. Register with the coordinator server
     reg_url = f"{server_url}/api/register"
@@ -82,7 +80,7 @@ def main():
         "client_id": args.client_id,
         "name": display_name,
         "sample_count": sample_count,
-        "entropy": entropy
+        "class_counts": counts,
     }).encode("utf-8")
 
     print(f"[CLIENT] Connecting to server at {server_url}...")
@@ -163,7 +161,8 @@ def main():
                             "Content-Type": "application/octet-stream",
                             "X-Client-Id": str(args.client_id),
                             "X-Round": str(server_round),
-                            "X-Elapsed-Time": f"{elapsed_time:.4f}"
+                            "X-Elapsed-Time": f"{elapsed_time:.4f}",
+                            "X-Q": str(Q),  # server normalises speed per step
                         }
                     )
                     with urllib.request.urlopen(submit_req, timeout=15) as submit_resp:
