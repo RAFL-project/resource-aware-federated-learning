@@ -286,6 +286,11 @@ def parse_args():
              "Default: half the clients, rounded up.",
     )
     parser.add_argument(
+        "--tag", default="",
+        help="suffix appended to the output filenames (ablation runs use it "
+             "so they do not overwrite the main results)",
+    )
+    parser.add_argument(
         "--budget",
         type=float,
         default=None,
@@ -489,6 +494,8 @@ def main():
     # fedavg keeps Milestone 1's filename so verify_baseline.py still finds
     # its ten seeds; the other arms are suffixed.
     suffix = "" if args.algorithm == "fedavg" else f"_{args.algorithm}"
+    if args.tag:
+        suffix += f"_{args.tag}"
     stem = (
         f"clients{args.clients}_"
         f"{args.heterogeneity}_"
