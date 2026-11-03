@@ -1,0 +1,28 @@
+{
+  "algorithm": "compass",
+  "clients": 5,
+  "heterogeneity": "normal",
+  "partition": "class",
+  "seed": 42,
+  "K": null,
+  "global_updates": 34,
+  "evaluated_points": 34,
+  "final_accuracy": 93.77,
+  "best_accuracy": 95.7,
+  "target_accuracy": 90.0,
+  "updates_to_target": 20,
+  "time_to_target_sec": 187.5188096574473,
+  "simulated_time_sec": 384.75553706683183,
+  "comm_transfers": 280,
+  "total_idle_sec": 113.06461791814706,
+  "selection_overhead_sec": 0.0008742479953980364,
+  "participation": {
+    "1": 28,
+    "2": 28,
+    "3": 27,
+    "4": 27,
+    "5": 30
+  },
+  "participation_fairness": 0.9984717269485481,
+  "mean_group_size": 3.9705882352941178
+}

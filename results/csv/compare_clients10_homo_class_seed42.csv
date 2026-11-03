@@ -1,0 +1,5 @@
+Arm,Best Acc (%),Final Acc (%),Sim Time (s),Updates,Updates to 90%,To 90% (s),Speedup,Comm (transfers),Idle (s),Fairness,Sel. Overhead (ms)
+Random Selection,87.6,82.82,314.6,10,never,never,-,100,66.0,0.906,0.6
+FedAvg (all clients),87.11,86.69,315.7,10,never,never,-,200,165.0,1.0,0.01
+FedCompass,86.49,86.49,300.5,18,never,never,-,200,195.0,1.0,0.44
+Proposed Adaptive,92.38,81.67,307.0,10,6,182.8,-,92,77.6,0.98,1.03

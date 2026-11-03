@@ -1,0 +1,33 @@
+{
+  "algorithm": "adaptive",
+  "clients": 10,
+  "heterogeneity": "exp",
+  "partition": "dirichlet",
+  "seed": 2,
+  "K": 10,
+  "global_updates": 49,
+  "evaluated_points": 49,
+  "final_accuracy": 95.99,
+  "best_accuracy": 96.25,
+  "target_accuracy": 90.0,
+  "updates_to_target": 20,
+  "time_to_target_sec": 186.06237360017928,
+  "simulated_time_sec": 406.7237012735614,
+  "comm_transfers": 692,
+  "total_idle_sec": 1240.3922913473227,
+  "selection_overhead_sec": 0.006330294005238102,
+  "participation": {
+    "1": 49,
+    "2": 49,
+    "3": 25,
+    "4": 25,
+    "5": 49,
+    "6": 25,
+    "7": 25,
+    "8": 25,
+    "9": 49,
+    "10": 25
+  },
+  "participation_fairness": 0.8964804552942939,
+  "mean_group_size": 7.061224489795919
+}
