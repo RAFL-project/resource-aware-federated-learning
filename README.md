@@ -63,15 +63,34 @@ Score_i = α · (1 / T_i) + β · D_i − γ · C_i + δ · age_i
 - `T_i` — estimated seconds for the client's round, an EMA of its observed
   completion times. Round 1 is a profiling round that selects everyone, so
   the server never scores a speed it had to invent.
-- `D_i` — usefulness of the local data: data share scaled by normalised label
-  entropy, so a client holding one digit class is worth less than one holding
-  ten.
+- `D_i` — usefulness of the local data, scored as the per-class data a client
+  *adds* to the clients already chosen this round (greedy, concave in class
+  mass). Two clients holding the same digits do not both win; a small client
+  holding a digit nobody else has does.
+- `1 / T_i` — likewise set-aware: a candidate is scored by the round time it
+  would force, i.e. the slowest member of the chosen set, since a synchronous
+  round waits for its straggler.
 - `C_i` — communication cost. Identical for every client here (same model
   either way), so this term cannot reorder a top-K; it is kept because the
   brief specifies it. See the `selection.py` docstring.
 - `δ · age_i` — ours, not the brief's. Pure top-K by speed permanently starves
   slow clients, which wrecks the participation-fairness metric and discards
   their data under a non-IID split.
+
+Two mechanisms on top of the score, both ours:
+
+- **Coverage-driven K.** `--K` is a cap, not a target: the greedy loop stops
+  as soon as every class has at least `--cover-floor` of its samples in the
+  chosen set (default `0.5 / clients`). Under a Dirichlet split a fixed K
+  can be structurally unable to cover every digit (5 clients, seed 42: four
+  digits each live on one client, so K=3 forgets a digit every round and the
+  accuracy curve oscillates by 30 points). Pass `--cover-floor 0` for fixed K.
+- **Deadline steps.** Each selected client gets its own local step count,
+  `Q_i = clamp(Q · T_fastest / T_i, Q/5, Q)`, so the round ends when the
+  fastest selected client has done Q steps instead of when the straggler has.
+  `T_i` is therefore an EMA of seconds *per step*. This is the idle-time fix
+  FedCompass gets from asynchrony, kept synchronous. `--no-deadline-steps`
+  disables it.
 
 ## Team Roster & Module Responsibilities
 
@@ -129,7 +148,9 @@ python run.py --clients 5 --heterogeneity homo --partition dirichlet --seed 42
 - `--rounds`, `--Q`, `--lr`: default to the paper's values (10 rounds, Q=200, lr=0.003)
 
 - `--algorithm`: `fedavg` (default), `random`, `compass`, or `adaptive`
-- `--K`: clients selected per round for `random`/`adaptive`; defaults to half
+- `--K`: clients selected per round for `random`; the per-round cap for
+  `adaptive` (defaults to half / all respectively)
+- `--cover-floor`, `--deadline-steps`: the two adaptive-only mechanisms above
 - `--budget`: simulated-seconds budget for the non-FedAvg arms
 
 Each run writes a curve to

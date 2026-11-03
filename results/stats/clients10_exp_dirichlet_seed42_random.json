@@ -7,15 +7,15 @@
   "K": 5,
   "global_updates": 11,
   "evaluated_points": 11,
-  "final_accuracy": 87.02,
-  "best_accuracy": 87.03,
+  "final_accuracy": 91.39,
+  "best_accuracy": 91.39,
   "target_accuracy": 90.0,
-  "updates_to_target": null,
-  "time_to_target_sec": null,
+  "updates_to_target": 10,
+  "time_to_target_sec": 889.5761414115373,
   "simulated_time_sec": 955.0991081089398,
   "comm_transfers": 110,
   "total_idle_sec": 2321.37443402745,
-  "selection_overhead_sec": 0.001999165950110182,
+  "selection_overhead_sec": 0.0006002919981256127,
   "participation": {
     "1": 4,
     "2": 4,
@@ -29,5 +29,5 @@
     "10": 2
   },
   "participation_fairness": 0.8976261127596439,
-  "mean_group_size": null
+  "mean_group_size": 5.0
 }
