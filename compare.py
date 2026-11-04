@@ -67,10 +67,11 @@ def run_arm(args, algorithm):
         "--partition", args.partition,
         "--seed", str(args.seed),
         "--rounds", str(args.rounds),
-        "--Q", str(args.Q),
         "--algorithm", algorithm,
         "--target-accuracy", str(args.target_accuracy),
     ]
+    if args.Q:
+        command += ["--Q", str(args.Q)]
     if args.device:
         command += ["--device", args.device]
     if algorithm in ("random", "adaptive"):
@@ -204,7 +205,7 @@ def parse_args():
     )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--rounds", type=int, default=10)
-    parser.add_argument("--Q", type=int, default=200)
+    parser.add_argument("--Q", type=int, default=None, help="default: run.py's per-client-count default")
     parser.add_argument("--K", type=int, default=None)
     parser.add_argument("--eval-every", type=int, default=1)
     parser.add_argument("--target-accuracy", type=float, default=90.0)

@@ -5,24 +5,24 @@
   "partition": "dirichlet",
   "seed": 1,
   "K": null,
-  "global_updates": 13,
-  "evaluated_points": 13,
-  "final_accuracy": 80.82,
-  "best_accuracy": 82.64,
+  "global_updates": 14,
+  "evaluated_points": 14,
+  "final_accuracy": 81.51,
+  "best_accuracy": 81.51,
   "target_accuracy": 90.0,
   "updates_to_target": null,
   "time_to_target_sec": null,
-  "simulated_time_sec": 300.27862132404124,
-  "comm_transfers": 100,
-  "total_idle_sec": 96.14738052938895,
-  "selection_overhead_sec": 0.0003162070001963002,
+  "simulated_time_sec": 304.81402306204654,
+  "comm_transfers": 110,
+  "total_idle_sec": 86.0354632672778,
+  "selection_overhead_sec": 0.0003587109822547063,
   "participation": {
-    "1": 10,
-    "2": 10,
-    "3": 10,
-    "4": 10,
-    "5": 10
+    "1": 11,
+    "2": 11,
+    "3": 11,
+    "4": 11,
+    "5": 11
   },
   "participation_fairness": 1.0,
-  "mean_group_size": 3.4615384615384617
+  "mean_group_size": 3.5
 }

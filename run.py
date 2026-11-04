@@ -276,7 +276,8 @@ def parse_args():
         help="Which comparison arm to run. Default fedavg (Milestone 1).",
     )
     parser.add_argument("--rounds", type=int, default=10)
-    parser.add_argument("--Q", type=int, default=200)
+    parser.add_argument("--Q", type=int, default=None,
+                        help="local steps; default 100 for 20 clients, else 200 (paper Table 9)")
     parser.add_argument("--lr", type=float, default=0.003)
     parser.add_argument(
         "--K",
@@ -335,7 +336,7 @@ def parse_args():
     compass_group = parser.add_argument_group("compass scheduler")
     compass_group.add_argument("--min-Q", type=int, default=None,
                                help="Q_min; default Q//5")
-    compass_group.add_argument("--latest-time-factor", type=float, default=1.5)
+    compass_group.add_argument("--latest-time-factor", type=float, default=1.2)
     compass_group.add_argument("--speed-momentum", type=float, default=0.9)
     compass_group.add_argument("--staleness-a", type=float, default=0.5,
                                help="polynomial staleness exponent, (u+1)^-a")
@@ -369,6 +370,8 @@ def main():
     if args.K is None:
         # Coverage-driven K only needs a cap; fixed K keeps the old default.
         args.K = args.clients if args.cover_floor else max(1, (args.clients + 1) // 2)
+    if args.Q is None:
+        args.Q = 100 if args.clients >= 20 else 200
     if args.min_Q is None:
         args.min_Q = max(1, args.Q // 5)
 

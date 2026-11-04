@@ -111,11 +111,12 @@ class CompassScheduler:
 
     def initial_dispatch(self):
         """
-        Everyone starts together on max_local_steps. The reference gets this
-        implicitly (an unseen client defaults to max_local_steps when its
-        first response is scored); here it is explicit.
+        Everyone starts together on min_local_steps: the paper's warm-up
+        (Algorithm 1, line 8), so the server learns speeds after a short
+        first cycle. The authors' released code starts on max_local_steps
+        instead; we follow the paper.
         """
-        return [(cid, self.max_local_steps) for cid in self.client_ids]
+        return [(cid, self.min_local_steps) for cid in self.client_ids]
 
     def next_timeout(self):
         """(fire_time, group_idx) of the soonest group deadline, or None."""
@@ -149,7 +150,7 @@ class CompassScheduler:
         info = self.client_info.get(client_id)
 
         start_time = info["start_time"] if info else 0.0
-        steps = info["local_steps"] if info else self.max_local_steps
+        steps = info["local_steps"] if info else self.min_local_steps
 
         elapsed = now - start_time
         observed_speed = elapsed / steps
@@ -164,7 +165,7 @@ class CompassScheduler:
             self.client_info[client_id] = {
                 "timestamp": 0,
                 "speed": observed_speed,
-                "local_steps": self.max_local_steps,
+                "local_steps": self.min_local_steps,
                 "start_time": 0.0,
             }
         else:
@@ -820,7 +821,7 @@ def _demo():
     sched, aggregations, participation, busy, end = simulate(speeds)
 
     # Every assigned step count honours the configured bounds. The only
-    # exception the algorithm permits is the max_local_steps bootstrap.
+    # bootstrap now starts on min_local_steps, so no exception.
     for cid, steps in sched.assigned_steps_log:
         assert sched.min_local_steps <= steps <= sched.max_local_steps, (
             cid, steps

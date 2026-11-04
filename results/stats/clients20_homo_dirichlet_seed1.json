@@ -12,10 +12,10 @@
   "target_accuracy": 90.0,
   "updates_to_target": null,
   "time_to_target_sec": null,
-  "simulated_time_sec": 325.4860124584317,
+  "simulated_time_sec": 162.74300622921584,
   "comm_transfers": 400,
-  "total_idle_sec": 531.8189890870253,
-  "selection_overhead_sec": 7.874001312302426e-06,
+  "total_idle_sec": 265.90949454351266,
+  "selection_overhead_sec": 1.7792030121199787e-05,
   "participation": {
     "1": 10,
     "2": 10,

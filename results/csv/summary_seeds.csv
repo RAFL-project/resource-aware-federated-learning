@@ -1,73 +1,73 @@
 clients,heterogeneity,partition,arm,seeds,best_acc_mean,best_acc_std,final_acc_mean,final_acc_std,reached_90,t90_mean,t90_std,comm_mean,fairness_mean
 5,homo,dirichlet,Random Selection,3,89.96,3.17,80.59,6.99,1,249.0,0.0,60.0,0.91
 5,homo,dirichlet,FedAvg (all clients),3,90.49,6.82,90.49,6.82,2,236.1,109.4,133.33,1.0
-5,homo,dirichlet,FedCompass,3,89.0,4.68,88.4,5.51,2,212.4,61.4,100.0,1.0
+5,homo,dirichlet,FedCompass,3,87.78,5.45,87.48,5.07,1,129.8,0.0,110.0,1.0
 5,homo,dirichlet,Proposed Adaptive,3,91.05,2.49,88.75,5.5,2,199.9,46.0,90.0,0.96
 5,homo,class,Random Selection,3,84.42,5.55,81.23,4.34,0,,,60.0,0.91
 5,homo,class,FedAvg (all clients),3,89.03,0.93,88.28,1.37,1,311.6,0.0,100.0,1.0
-5,homo,class,FedCompass,3,87.98,2.88,87.5,3.4,1,242.0,0.0,100.0,1.0
+5,homo,class,FedCompass,3,88.27,2.28,87.26,3.16,1,247.0,0.0,110.0,1.0
 5,homo,class,Proposed Adaptive,3,92.71,2.96,92.37,3.03,2,168.2,14.9,69.33,0.91
 5,normal,dirichlet,Random Selection,3,90.5,3.19,75.71,4.05,2,335.8,45.9,70.0,0.93
 5,normal,dirichlet,FedAvg (all clients),3,88.64,6.14,87.96,6.16,1,180.2,0.0,100.0,1.0
-5,normal,dirichlet,FedCompass,3,93.61,4.28,93.44,4.19,2,183.95,22.25,300.67,0.97
+5,normal,dirichlet,FedCompass,3,94.42,3.14,93.75,3.72,3,202.73,74.45,324.0,0.98
 5,normal,dirichlet,Proposed Adaptive,3,96.01,1.95,94.97,1.57,3,161.6,57.31,290.67,0.96
 5,normal,class,Random Selection,3,89.96,1.16,87.67,3.12,1,414.6,0.0,70.0,0.93
 5,normal,class,FedAvg (all clients),3,89.03,0.93,88.28,1.37,1,385.6,0.0,100.0,1.0
-5,normal,class,FedCompass,3,93.61,2.5,92.55,2.67,3,271.5,123.49,300.67,0.97
+5,normal,class,FedCompass,3,93.18,2.47,91.56,2.85,2,192.25,18.95,324.0,0.98
 5,normal,class,Proposed Adaptive,3,97.68,0.47,95.82,1.55,3,138.8,51.52,223.33,0.92
 5,exp,dirichlet,Random Selection,3,92.8,2.97,83.64,10.89,2,737.4,547.1,84.0,0.93
 5,exp,dirichlet,FedAvg (all clients),3,88.64,6.14,87.96,6.16,1,141.9,0.0,100.0,1.0
-5,exp,dirichlet,FedCompass,3,92.83,3.64,92.05,3.62,2,334.75,222.35,1467.33,0.71
+5,exp,dirichlet,FedCompass,3,92.08,3.66,87.08,3.14,1,177.9,0.0,1496.0,0.72
 5,exp,dirichlet,Proposed Adaptive,3,96.76,0.87,96.31,0.82,3,252.13,156.62,417.33,0.96
 5,exp,class,Random Selection,3,91.4,2.9,85.42,4.16,1,979.5,0.0,84.0,0.93
 5,exp,class,FedAvg (all clients),3,89.03,0.93,88.28,1.37,1,1628.7,0.0,100.0,1.0
-5,exp,class,FedCompass,3,94.43,3.6,92.96,2.73,2,594.7,125.8,1467.33,0.71
+5,exp,class,FedCompass,3,93.49,3.9,91.85,4.31,2,596.4,51.8,1496.0,0.72
 5,exp,class,Proposed Adaptive,3,96.7,1.05,95.24,1.93,3,306.17,174.76,414.0,0.9
 10,homo,dirichlet,Random Selection,3,84.63,5.25,84.25,5.72,1,314.6,0.0,100.0,0.91
 10,homo,dirichlet,FedAvg (all clients),3,91.96,2.53,91.47,3.13,2,222.1,0.9,200.0,1.0
-10,homo,dirichlet,FedCompass,3,90.95,3.08,90.78,3.32,2,228.4,15.3,200.0,1.0
+10,homo,dirichlet,FedCompass,3,92.99,0.77,92.34,1.36,3,201.6,17.03,220.0,1.0
 10,homo,dirichlet,Proposed Adaptive,3,85.38,6.99,81.71,8.28,1,274.0,0.0,136.67,0.9
 10,homo,class,Random Selection,3,86.12,5.91,82.9,4.05,1,250.4,0.0,100.0,0.91
 10,homo,class,FedAvg (all clients),3,88.34,1.21,87.68,0.72,0,,,200.0,1.0
-10,homo,class,FedCompass,3,86.34,1.82,86.14,1.77,0,,,200.0,1.0
+10,homo,class,FedCompass,3,89.27,2.04,88.88,1.55,1,219.7,0.0,220.0,1.0
 10,homo,class,Proposed Adaptive,3,91.62,3.01,84.61,2.43,2,198.8,16.0,102.0,0.96
 10,normal,dirichlet,Random Selection,3,85.69,5.44,83.17,8.91,1,382.3,0.0,110.0,0.92
 10,normal,dirichlet,FedAvg (all clients),3,91.96,2.53,91.47,3.13,2,270.95,1.35,200.0,1.0
-10,normal,dirichlet,FedCompass,3,96.2,0.11,93.71,3.5,3,210.5,77.4,571.33,0.98
+10,normal,dirichlet,FedCompass,3,96.27,0.84,95.58,0.91,3,179.87,83.77,611.33,0.98
 10,normal,dirichlet,Proposed Adaptive,3,93.73,3.89,88.11,9.7,2,149.2,26.7,397.33,0.91
 10,normal,class,Random Selection,3,87.44,4.2,84.17,2.32,1,298.3,0.0,110.0,0.92
 10,normal,class,FedAvg (all clients),3,88.34,1.21,87.68,0.72,0,,,200.0,1.0
-10,normal,class,FedCompass,3,90.93,1.89,89.49,2.94,2,200.6,13.5,571.33,0.98
+10,normal,class,FedCompass,3,92.68,2.95,88.84,2.49,2,119.9,14.4,611.33,0.98
 10,normal,class,Proposed Adaptive,3,96.64,0.17,86.96,3.28,3,212.87,91.34,213.33,0.96
 10,exp,dirichlet,Random Selection,3,88.63,1.95,86.48,4.39,1,889.6,0.0,120.0,0.92
 10,exp,dirichlet,FedAvg (all clients),3,91.96,2.53,91.47,3.13,2,896.8,240.8,200.0,1.0
-10,exp,dirichlet,FedCompass,3,90.61,4.72,87.63,5.57,2,866.0,741.0,3988.0,0.55
+10,exp,dirichlet,FedCompass,3,90.13,5.98,87.66,4.4,2,653.8,567.6,3914.67,0.54
 10,exp,dirichlet,Proposed Adaptive,3,94.96,2.26,92.07,6.16,3,605.4,569.67,688.67,0.9
 10,exp,class,Random Selection,3,87.44,4.2,85.42,4.08,1,1043.3,0.0,120.0,0.92
 10,exp,class,FedAvg (all clients),3,88.34,1.21,87.68,0.72,0,,,200.0,1.0
-10,exp,class,FedCompass,3,94.6,2.75,93.82,3.21,3,449.73,282.83,3988.0,0.55
+10,exp,class,FedCompass,3,93.67,3.13,93.41,3.04,3,483.63,331.73,3914.67,0.54
 10,exp,class,Proposed Adaptive,3,96.64,0.62,92.4,3.05,3,339.87,173.3,612.67,0.94
-20,homo,dirichlet,Random Selection,3,88.63,7.18,88.63,7.18,2,269.5,46.5,200.0,0.91
-20,homo,dirichlet,FedAvg (all clients),3,66.95,39.34,66.95,39.34,2,211.5,47.4,400.0,1.0
-20,homo,dirichlet,FedCompass,3,94.48,1.67,94.48,1.67,3,170.8,37.39,400.0,1.0
-20,homo,dirichlet,Proposed Adaptive,3,90.37,4.01,81.02,13.37,1,185.7,0.0,187.33,0.96
-20,homo,class,Random Selection,3,96.02,1.78,95.98,1.74,3,170.83,107.88,200.0,0.91
-20,homo,class,FedAvg (all clients),3,97.51,0.18,97.43,0.17,3,108.03,13.94,400.0,1.0
-20,homo,class,FedCompass,3,97.05,0.52,97.04,0.53,3,118.7,1.71,400.0,1.0
-20,homo,class,Proposed Adaptive,3,96.54,0.76,96.05,1.34,3,206.77,31.99,111.33,0.97
-20,normal,dirichlet,Random Selection,3,90.94,4.11,90.14,4.18,2,327.3,45.4,220.0,0.92
-20,normal,dirichlet,FedAvg (all clients),3,66.95,39.34,66.95,39.34,2,276.85,48.25,400.0,1.0
-20,normal,dirichlet,FedCompass,3,97.11,1.1,96.67,1.39,3,139.07,28.87,1140.0,0.99
-20,normal,dirichlet,Proposed Adaptive,3,67.29,40.64,67.09,40.49,2,145.3,3.6,424.67,0.96
-20,normal,class,Random Selection,3,96.45,1.23,95.5,2.08,3,215.73,139.17,220.0,0.92
-20,normal,class,FedAvg (all clients),3,97.51,0.18,97.43,0.17,3,137.43,12.51,400.0,1.0
-20,normal,class,FedCompass,3,98.61,0.07,98.59,0.06,3,110.1,5.83,1140.0,0.99
-20,normal,class,Proposed Adaptive,3,97.31,0.71,97.16,0.57,3,136.17,19.42,185.33,0.98
-20,exp,dirichlet,Random Selection,3,88.67,4.63,81.36,12.49,1,1096.4,0.0,226.67,0.87
-20,exp,dirichlet,FedAvg (all clients),3,66.95,39.34,66.95,39.34,2,594.6,149.9,400.0,1.0
-20,exp,dirichlet,FedCompass,3,94.21,2.4,92.28,4.32,3,478.7,151.24,7850.67,0.48
-20,exp,dirichlet,Proposed Adaptive,3,68.43,40.37,67.01,40.64,2,281.1,20.9,1179.33,0.96
-20,exp,class,Random Selection,3,97.15,1.58,95.99,2.29,3,500.47,204.0,266.67,0.93
-20,exp,class,FedAvg (all clients),3,97.51,0.18,97.43,0.17,3,392.53,165.88,400.0,1.0
-20,exp,class,FedCompass,3,99.06,0.12,98.88,0.25,3,200.1,53.02,7850.67,0.48
-20,exp,class,Proposed Adaptive,3,98.4,0.09,97.73,0.18,3,191.7,39.81,701.33,0.99
+20,homo,dirichlet,Random Selection,3,88.85,2.41,84.79,7.96,1,158.0,0.0,200.0,0.91
+20,homo,dirichlet,FedAvg (all clients),3,66.33,38.88,66.21,38.79,2,114.3,1.2,400.0,1.0
+20,homo,dirichlet,FedCompass,3,93.95,2.16,93.95,2.16,3,95.17,33.36,440.0,1.0
+20,homo,dirichlet,Proposed Adaptive,3,64.32,37.52,57.37,35.09,1,122.8,0.0,187.33,0.96
+20,homo,class,Random Selection,3,95.58,1.85,95.36,1.76,3,64.07,23.71,200.0,0.91
+20,homo,class,FedAvg (all clients),3,97.54,0.22,97.54,0.22,3,54.2,8.35,400.0,1.0
+20,homo,class,FedCompass,3,96.96,0.56,96.89,0.61,3,53.4,8.0,440.0,1.0
+20,homo,class,Proposed Adaptive,3,95.19,1.52,95.13,1.6,3,118.03,18.68,111.33,0.97
+20,normal,dirichlet,Random Selection,3,88.85,2.41,86.97,2.15,1,186.3,0.0,220.0,0.92
+20,normal,dirichlet,FedAvg (all clients),3,66.33,38.88,66.21,38.79,2,150.9,8.7,400.0,1.0
+20,normal,dirichlet,FedCompass,3,96.89,1.01,96.79,0.96,3,57.57,23.65,1265.33,0.99
+20,normal,dirichlet,Proposed Adaptive,3,66.98,40.42,66.69,40.22,2,100.4,3.9,424.67,0.96
+20,normal,class,Random Selection,3,95.66,1.78,95.66,1.78,3,81.33,32.05,220.0,0.92
+20,normal,class,FedAvg (all clients),3,97.54,0.22,97.54,0.22,3,69.5,14.97,400.0,1.0
+20,normal,class,FedCompass,3,98.6,0.11,98.56,0.06,3,30.57,1.83,1265.33,0.99
+20,normal,class,Proposed Adaptive,3,96.16,1.34,95.41,0.48,3,103.0,33.4,185.33,0.98
+20,exp,dirichlet,Random Selection,3,92.04,4.41,90.91,4.9,2,507.85,40.35,266.67,0.93
+20,exp,dirichlet,FedAvg (all clients),3,66.33,38.88,66.21,38.79,2,316.6,7.9,400.0,1.0
+20,exp,dirichlet,FedCompass,3,93.55,3.77,91.65,6.05,2,178.75,1.55,7882.67,0.49
+20,exp,dirichlet,Proposed Adaptive,3,93.82,1.61,92.5,0.77,3,302.73,106.04,1179.33,0.96
+20,exp,class,Random Selection,3,96.46,2.34,96.19,2.15,3,198.8,51.0,266.67,0.93
+20,exp,class,FedAvg (all clients),3,97.54,0.22,97.54,0.22,3,184.97,39.99,400.0,1.0
+20,exp,class,FedCompass,3,98.89,0.23,98.72,0.29,3,116.77,24.7,7882.67,0.49
+20,exp,class,Proposed Adaptive,3,98.14,0.14,97.86,0.33,3,100.57,26.63,701.33,0.99

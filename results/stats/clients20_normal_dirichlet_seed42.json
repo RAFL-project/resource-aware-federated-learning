@@ -7,15 +7,15 @@
   "K": null,
   "global_updates": 10,
   "evaluated_points": 10,
-  "final_accuracy": 93.19,
-  "best_accuracy": 93.19,
+  "final_accuracy": 94.21,
+  "best_accuracy": 94.21,
   "target_accuracy": 90.0,
-  "updates_to_target": 8,
-  "time_to_target_sec": 325.07328204067346,
-  "simulated_time_sec": 407.85548983055423,
+  "updates_to_target": 7,
+  "time_to_target_sec": 142.20386299229395,
+  "simulated_time_sec": 203.92774491527712,
   "comm_transfers": 400,
-  "total_idle_sec": 2227.538374776282,
-  "selection_overhead_sec": 1.1333017027936876e-05,
+  "total_idle_sec": 1113.769187388141,
+  "selection_overhead_sec": 1.3583005056716502e-05,
   "participation": {
     "1": 10,
     "2": 10,
@@ -39,5 +39,5 @@
     "20": 10
   },
   "participation_fairness": 1.0,
-  "mean_group_size": null
+  "mean_group_size": 20.0
 }
